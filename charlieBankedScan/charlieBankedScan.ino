@@ -1,4 +1,6 @@
 
+#define BANKPERIOD 5000
+
 #define PINCOUNT 4
 const int pin[] = { 3, 4, 8, 9 };
 
@@ -22,23 +24,12 @@ void setup()
     vidmem[i] = 0;
 }
 
-void loop()
+void outputUpdate()
 {
-  static int p = 0;
-  static int c = 5;
-  if ( --c == 0 )
+  static unsigned long nextBank = micros();
+  if ( micros() > nextBank )
   {
-    vidmem[p] = vidmem[p] ? 0 : 255;
-    ++p;
-    if ( p >= LEDCOUNT )
-      p = 0;
-    c = 50000;
-  }
-
-  static int bankSwitch = 1;
-  if ( ++bankSwitch > 1000 )
-  {
-    bankSwitch = 0;
+    nextBank += BANKPERIOD;
     
     static int iBank = 0;
     if ( ++iBank >= PINCOUNT )
@@ -52,8 +43,55 @@ void loop()
     
     for( int iSub = 0; iSub < PINCOUNT-1; ++iSub )
     {
-      pinMode( pin[ ledH[ banks[iBank][iSub]]], vidmem[ banks[iBank][iSub] ] == 0 ? INPUT : OUTPUT );
-      digitalWrite( pin[ ledH[ banks[iBank][iSub]]], HIGH );
+      if ( vidmem[ banks[iBank][iSub] ] != 0 )
+      {
+        pinMode( pin[ ledH[ banks[iBank][iSub]]], OUTPUT );
+        digitalWrite( pin[ ledH[ banks[iBank][iSub]]], HIGH );
+      }
     }
   }
+}
+
+#define MODECOUNT 1;
+void mode00( bool init )
+{
+  if ( init )
+    for( int i = 0; i < LEDCOUNT; ++i )
+      vidmem[i] = 0;
+    
+  static int p = 0;
+  static unsigned long nextFrame = millis();
+  if ( millis() > nextFrame )
+  {
+    nextFrame += 200; //   <<<<------   period
+
+    vidmem[p] = vidmem[p] ? 0 : 255;
+    ++p;
+    if ( p >= LEDCOUNT )
+      p = 0;
+  }
+}
+
+void loop()
+{
+  outputUpdate();
+  
+  static int mode = 0;
+  static unsigned long nextModeChange = millis();
+  bool newMode = false;
+  if ( millis() > nextModeChange )
+  {
+    nextModeChange += 5000;
+    ++mode;
+    if( MODECOUNT == mode )
+      mode = 0;
+    newMode = true;
+  }
+    
+  switch( mode )
+  {
+    case 0:
+      mode00( newMode );
+      break;
+  }  
 }
