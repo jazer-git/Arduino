@@ -52,18 +52,23 @@ void outputUpdate()
   }
 }
 
-#define MODECOUNT 1;
+#define MODECOUNT 2
 void mode00( bool init )
 {
-  if ( init )
-    for( int i = 0; i < LEDCOUNT; ++i )
-      vidmem[i] = 0;
-    
   static int p = 0;
   static unsigned long nextFrame = millis();
+
+  if ( init )
+  {
+    for( int i = 0; i < LEDCOUNT; ++i )
+      vidmem[i] = 0;
+      p = 0;
+      nextFrame = millis();
+  }
+
   if ( millis() > nextFrame )
   {
-    nextFrame += 200; //   <<<<------   period
+    nextFrame += 75; //   <<<<------   period
 
     vidmem[p] = vidmem[p] ? 0 : 255;
     ++p;
@@ -72,18 +77,35 @@ void mode00( bool init )
   }
 }
 
+void mode01( bool init )
+{
+  static unsigned long nextFrame = millis();
+  if ( init )
+  {
+    nextFrame = millis();
+  }
+  
+  if ( millis() > nextFrame )
+  {
+    nextFrame += 50;
+    
+    int r = random( LEDCOUNT );
+    vidmem[r] = vidmem[r] ? 0 : 255;
+  }
+}
+
 void loop()
 {
   outputUpdate();
   
-  static int mode = 0;
+  static int mode = 1;
   static unsigned long nextModeChange = millis();
   bool newMode = false;
   if ( millis() > nextModeChange )
   {
-    nextModeChange += 5000;
+    nextModeChange += 10000;
     ++mode;
-    if( MODECOUNT == mode )
+    if( mode == MODECOUNT )
       mode = 0;
     newMode = true;
   }
@@ -92,6 +114,9 @@ void loop()
   {
     case 0:
       mode00( newMode );
+      break;
+    case 1:
+      mode01( newMode );
       break;
   }  
 }
