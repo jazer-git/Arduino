@@ -53,7 +53,7 @@ void outputUpdate()
 }
 
 #define MODECOUNT 2
-void mode00( bool init )
+void fillUp( bool init )
 {
   static int p = 0;
   static unsigned long nextFrame = millis();
@@ -77,7 +77,7 @@ void mode00( bool init )
   }
 }
 
-void mode01( bool init )
+void randomBlinky( bool init )
 {
   static unsigned long nextFrame = millis();
   if ( init )
@@ -94,6 +94,29 @@ void mode01( bool init )
   }
 }
 
+void cylon( bool init )
+{
+  static unsigned long nextFrame = millis();
+  static int frameNumber = 0;
+  if ( init )
+  {
+    nextFrame = millis();
+  }
+
+  static int frames[] = { 0,0,0,1,1,2,3,4,5,6,6,7,8,9,10,10,11,11,11,11,11,10,10,9,8,7,6,6,5,4,3,2,1,1,0,0,-1};
+  if ( millis() > nextFrame )
+  {
+    nextFrame += 25;
+    
+    vidmem[frames[frameNumber]] = 0;
+    if( frames[++frameNumber] == -1 )
+      frameNumber = 0;
+    vidmem[frames[frameNumber]] = 255;
+  }
+
+}
+
+#define MODECOUNT 3
 void loop()
 {
   outputUpdate();
@@ -113,10 +136,13 @@ void loop()
   switch( mode )
   {
     case 0:
-      mode00( newMode );
+      fillUp( newMode );
       break;
     case 1:
-      mode01( newMode );
+      randomBlinky( newMode );
+      break;
+    case 2:
+      cylon( newMode );
       break;
   }  
 }
